@@ -40,6 +40,7 @@ import com.google.cloud.tools.jib.image.json.BuildableManifestTemplate;
 import com.google.cloud.tools.jib.image.json.ContainerConfigurationTemplate;
 import com.google.cloud.tools.jib.image.json.JsonToImageTranslator;
 import com.google.cloud.tools.jib.image.json.ManifestAndConfig;
+import com.google.cloud.tools.jib.image.json.ManifestAndDigest;
 import com.google.cloud.tools.jib.image.json.ManifestTemplate;
 import com.google.cloud.tools.jib.image.json.UnknownManifestFormatException;
 import com.google.cloud.tools.jib.image.json.V21ManifestTemplate;
@@ -199,28 +200,28 @@ class PullBaseImageStep implements Callable<ImageAndAuthorization> {
       ProgressEventDispatcher progressEventDispatcher)
       throws IOException, RegistryException, LayerPropertyNotFoundException,
           LayerCountMismatchException, BadContainerConfigurationFormatException {
+    EventHandlers eventHandlers = buildConfiguration.getEventHandlers();
     RegistryClient registryClient =
         buildConfiguration
             .newBaseImageRegistryClientFactory()
             .setAuthorization(registryAuthorization)
             .newRegistryClient();
 
-    ManifestTemplate manifestTemplate =
+    ManifestAndDigest manifestAndDigest =
         registryClient.pullManifest(buildConfiguration.getBaseImageConfiguration().getImageTag());
+    ManifestTemplate manifestTemplate = manifestAndDigest.getManifest();
 
     // special handling if we happen upon a manifest list, redirect to a manifest and continue
     // handling it normally
     if (manifestTemplate instanceof V22ManifestListTemplate) {
-      buildConfiguration
-          .getEventHandlers()
-          .dispatch(
-              LogEvent.lifecycle(
-                  "The base image reference is manifest list, searching for linux/amd64"));
-      manifestTemplate =
+      eventHandlers.dispatch(
+          LogEvent.lifecycle(
+              "The base image reference is manifest list, searching for linux/amd64"));
+      manifestAndDigest =
           obtainPlatformSpecificImageManifest(
               registryClient, (V22ManifestListTemplate) manifestTemplate);
+      manifestTemplate = manifestAndDigest.getManifest();
     }
-
     switch (manifestTemplate.getSchemaVersion()) {
       case 1:
         V21ManifestTemplate v21ManifestTemplate = (V21ManifestTemplate) manifestTemplate;
@@ -275,7 +276,7 @@ class PullBaseImageStep implements Callable<ImageAndAuthorization> {
    * Looks through a manifest list for any amd64/linux manifest and downloads and returns the first
    * manifest it finds.
    */
-  private ManifestTemplate obtainPlatformSpecificImageManifest(
+  private ManifestAndDigest obtainPlatformSpecificImageManifest(
       RegistryClient registryClient, V22ManifestListTemplate manifestListTemplate)
       throws RegistryException, IOException {
 

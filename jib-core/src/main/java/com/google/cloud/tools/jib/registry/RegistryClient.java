@@ -30,6 +30,7 @@ import com.google.cloud.tools.jib.global.JibSystemProperties;
 import com.google.cloud.tools.jib.http.Authorization;
 import com.google.cloud.tools.jib.http.Response;
 import com.google.cloud.tools.jib.image.json.BuildableManifestTemplate;
+import com.google.cloud.tools.jib.image.json.ManifestAndDigest;
 import com.google.cloud.tools.jib.image.json.ManifestTemplate;
 import com.google.cloud.tools.jib.json.JsonTemplate;
 import com.google.cloud.tools.jib.json.JsonTemplateMapper;
@@ -171,6 +172,7 @@ public class RegistryClient {
    */
   @JsonIgnoreProperties(ignoreUnknown = true)
   private static class TokenPayloadTemplate implements JsonTemplate {
+
     @Nullable private List<AccessClaim> access;
   }
 
@@ -181,6 +183,7 @@ public class RegistryClient {
    */
   @JsonIgnoreProperties(ignoreUnknown = true)
   private static class AccessClaim implements JsonTemplate {
+
     @Nullable private String type;
     @Nullable private String name;
     @Nullable private List<String> actions;
@@ -279,25 +282,26 @@ public class RegistryClient {
   }
 
   /**
-   * Pulls the image manifest for a specific tag.
+   * Pulls the image manifest and digest for a specific tag.
    *
    * @param <T> child type of ManifestTemplate
    * @param imageTag the tag to pull on
    * @param manifestTemplateClass the specific version of manifest template to pull, or {@link
    *     ManifestTemplate} to pull predefined subclasses; see: {@link
    *     ManifestPuller#handleResponse(Response)}
-   * @return the manifest template
+   * @return the {@link ManifestAndDigest}
    * @throws IOException if communicating with the endpoint fails
    * @throws RegistryException if communicating with the endpoint fails
    */
-  public <T extends ManifestTemplate> T pullManifest(
+  public <T extends ManifestTemplate> ManifestAndDigest<T> pullManifest(
       String imageTag, Class<T> manifestTemplateClass) throws IOException, RegistryException {
     ManifestPuller<T> manifestPuller =
         new ManifestPuller<>(registryEndpointRequestProperties, imageTag, manifestTemplateClass);
     return callRegistryEndpoint(manifestPuller);
   }
 
-  public ManifestTemplate pullManifest(String imageTag) throws IOException, RegistryException {
+  public ManifestAndDigest<ManifestTemplate> pullManifest(String imageTag)
+      throws IOException, RegistryException {
     return pullManifest(imageTag, ManifestTemplate.class);
   }
 

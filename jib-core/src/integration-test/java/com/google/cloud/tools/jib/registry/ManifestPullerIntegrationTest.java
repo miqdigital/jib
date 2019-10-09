@@ -19,6 +19,7 @@ package com.google.cloud.tools.jib.registry;
 import com.google.cloud.tools.jib.api.RegistryException;
 import com.google.cloud.tools.jib.event.EventHandlers;
 import com.google.cloud.tools.jib.http.Authorization;
+import com.google.cloud.tools.jib.image.json.ManifestAndDigest;
 import com.google.cloud.tools.jib.image.json.ManifestTemplate;
 import com.google.cloud.tools.jib.image.json.V21ManifestTemplate;
 import com.google.cloud.tools.jib.image.json.V22ManifestListTemplate;
@@ -50,8 +51,9 @@ public class ManifestPullerIntegrationTest {
         RegistryClient.factory(EventHandlers.NONE, "localhost:5000", "busybox")
             .setAllowInsecureRegistries(true)
             .newRegistryClient();
-    V21ManifestTemplate manifestTemplate =
+    ManifestAndDigest<V21ManifestTemplate> manifestDigest =
         registryClient.pullManifest("latest", V21ManifestTemplate.class);
+    V21ManifestTemplate manifestTemplate = manifestDigest.getManifest();
 
     Assert.assertEquals(1, manifestTemplate.getSchemaVersion());
     Assert.assertTrue(manifestTemplate.getFsLayers().size() > 0);
@@ -61,7 +63,7 @@ public class ManifestPullerIntegrationTest {
   public void testPull_v22() throws IOException, RegistryException {
     RegistryClient registryClient =
         RegistryClient.factory(EventHandlers.NONE, "gcr.io", "distroless/java").newRegistryClient();
-    ManifestTemplate manifestTemplate = registryClient.pullManifest("latest");
+    ManifestTemplate manifestTemplate = registryClient.pullManifest("latest").getManifest();
 
     Assert.assertEquals(2, manifestTemplate.getSchemaVersion());
     V22ManifestTemplate v22ManifestTemplate = (V22ManifestTemplate) manifestTemplate;
@@ -77,13 +79,14 @@ public class ManifestPullerIntegrationTest {
     RegistryClient registryClient = factory.setAuthorization(authorization).newRegistryClient();
 
     // Ensure 11-jre-slim is a manifest list
-    V22ManifestListTemplate manifestListTemplate =
+    ManifestAndDigest<V22ManifestListTemplate> manifestAndDigest =
         registryClient.pullManifest("11-jre-slim", V22ManifestListTemplate.class);
+    V22ManifestListTemplate manifestListTemplate = manifestAndDigest.getManifest();
     Assert.assertEquals(2, manifestListTemplate.getSchemaVersion());
     Assert.assertTrue(manifestListTemplate.getManifests().size() > 0);
 
     // Generic call to 11-jre-slim should NOT pull a manifest list (delegate to registry default)
-    ManifestTemplate manifestTemplate = registryClient.pullManifest("11-jre-slim");
+    ManifestTemplate manifestTemplate = registryClient.pullManifest("11-jre-slim").getManifest();
     Assert.assertEquals(2, manifestTemplate.getSchemaVersion());
     Assert.assertThat(manifestTemplate, CoreMatchers.instanceOf(V22ManifestTemplate.class));
 
@@ -96,7 +99,8 @@ public class ManifestPullerIntegrationTest {
     }
 
     // Referencing a manifest list by sha256, should return a manifest list
-    ManifestTemplate sha256ManifestList = registryClient.pullManifest(KNOWN_MANIFEST_LIST_SHA);
+    ManifestTemplate sha256ManifestList =
+        registryClient.pullManifest(KNOWN_MANIFEST_LIST_SHA).getManifest();
     Assert.assertEquals(2, sha256ManifestList.getSchemaVersion());
     Assert.assertThat(sha256ManifestList, CoreMatchers.instanceOf(V22ManifestListTemplate.class));
     Assert.assertTrue(((V22ManifestListTemplate) sha256ManifestList).getManifests().size() > 0);
