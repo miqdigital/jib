@@ -34,6 +34,10 @@ The CLI tool is powered by [Jib Core](https://github.com/GoogleContainerTools/ji
 * [Jar Command](#jar-command)
   * [Quickstart](#quickstart-1)
   * [Options](#options-1)
+* [War Command](#war-command)
+  * [Quickstart](#quickstart-2)
+  * [Options](#options-2)
+* [Options Shared Between Jar and War Commands](#options-shared-between-jar-and-war-commands)
 * [Common Jib CLI Options](#common-jib-cli-options)
   * [Auth/Security](#authsecurity)
   * [Info Params](#info-params)
@@ -41,6 +45,7 @@ The CLI tool is powered by [Jib Core](https://github.com/GoogleContainerTools/ji
 * [Global Jib Configuration](#global-jib-configuration)
 * [References](#references)
   * [Fully Annotated Build File (`jib.yaml`)](#fully-annotated-build-file-jibyaml)
+* [Privacy](#privacy)
 
 ## Get the Jib CLI
 
@@ -50,7 +55,7 @@ Most users should download a ZIP archive (Java application). We are working on r
 
 A JRE is required to run this Jib CLI distribution.
 
-Find the [latest jib-cli 0.5.0 release](https://github.com/GoogleContainerTools/jib/releases/tag/v0.5.0-cli) on the [Releases page](https://github.com/GoogleContainerTools/jib/releases), download `jib-jre-<version>.zip`, and unzip it. The zip file contains the `jib` (`jib.bat` for Windows) script at `jib/bin/`. Optionally, add the binary directory to your `$PATH` so that you can call `jib` from anywhere.
+Find the [latest jib-cli 0.7.0 release](https://github.com/GoogleContainerTools/jib/releases/tag/v0.7.0-cli) on the [Releases page](https://github.com/GoogleContainerTools/jib/releases), download `jib-jre-<version>.zip`, and unzip it. The zip file contains the `jib` (`jib.bat` for Windows) script at `jib/bin/`. Optionally, add the binary directory to your `$PATH` so that you can call `jib` from anywhere.
 
 ### Windows: Install with `choco`
 
@@ -70,20 +75,24 @@ Use the `application` plugin's `installDist` task to create a runnable installat
 $ ./gradlew jib-cli:installDist
 # run
 $ ./jib-cli/build/install/jib/bin/jib
-
 ```
+
 ## Supported Commands
 
 The Jib CLI supports two commands:
  1. `build` - containerizes using a [build file](#fully-annotated-build-file-jibyaml).
  2. `jar` - containerizes JAR files.
+ 3. `war` - containerizes WAR files.
 
 ## Build Command
+
 This command follows the following pattern:
 ```
 jib build --target <image name> [options]
 ```
+
 ### Quickstart
+
 1. Create a hello world script (`script.sh`) containing:
     ```sh
     #!/bin/sh
@@ -107,9 +116,7 @@ jib build --target <image name> [options]
                 filePermissions: 755
               src: script.sh
               dest: /script.sh
-
     ```
-
 3. Build to docker daemon
    ```
     $ jib build --target=docker://jib-cli-quickstart
@@ -121,6 +128,7 @@ jib build --target <image name> [options]
    ```
 
 ### Options
+
 Optional flags for the `build` command:
 
 Option | Description
@@ -129,13 +137,15 @@ Option | Description
 `-c, --context`    |  The context root directory of the build (ex: path/to/my/build/things)
 `-p, --parameter`  |  Templating parameter to inject into build file, replace ${<name>} with <value> (repeatable)
 
-
 ## Jar Command
+
 This command follows the following pattern:
 ```
 jib jar --target <image name> path/to/myapp.jar [options]
 ```
+
 ### Quickstart
+
 1. Have your JAR (thin or fat) ready. We will be using the [Spring Petclinic](https://projects.spring.io/spring-petclinic/) JAR in this Quickstart.
    ```
     $ git clone https://github.com/spring-projects/spring-petclinic.git
@@ -146,14 +156,47 @@ jib jar --target <image name> path/to/myapp.jar [options]
    ```
     $ jib jar --target=docker://cli-jar-quickstart target/spring-petclinic-*.jar
    ```
-
 3. Run the image and open your browser at http://localhost:8080
    ```
     $ docker run -p 8080:8080 cli-jar-quickstart
    ```
-   
+
 ### Options
+
 Optional flags for the `jar` command:
+
+Option | Description
+---       | ---
+`--jvm-flags`     | JVM arguments, example: `--jvm-flags=-Dmy.property=value,-Xshare:off`
+`--mode`          | The jar processing mode, candidates: exploded, packaged, default: exploded
+
+## War Command
+
+This command follows the following pattern:
+```
+ $ jib war --target <image-name> path/to/myapp.war 
+```
+
+## Quickstart
+
+1. Have your sample WAR ready and use the `war` command to containerize your WAR. By default, the WAR command uses [`jetty`](https://hub.docker.com/_/jetty) as the base image so the entrypoint is set to `java -jar /usr/local/jetty/start.jar`:
+    ```
+     $ jib war --target=docker://cli-war-quickstart <your-sample>.war
+    ```
+2.  Run the image and open your browser at http://localhost:8080
+    ```
+     $ docker run -p 8080:8080 cli-war-quickstart
+    ```
+## Options
+
+Flags for the `war` command:
+
+Option | Description
+---       | ---
+`--app-root` | The app root on the container. Customizing the app-root is helpful if you are using a different Servlet engine base image (for example, Tomcat)
+
+## Options Shared Between the Jar and War Commands
+Here are a few container configurations that can be customized when using the `jar` and `war` commands.
 
 Option | Description
 ---       | ---
@@ -163,26 +206,27 @@ Option | Description
 `--expose`        | Ports to expose on container, example: `--expose=5000,7/udp`.
 `--from`          | The base image to use.
 `--image-format`  | Format of container, candidates: Docker, OCI, default: Docker.
-`--jvm-flags`     | JVM arguments, example: `--jvm-flags=-Dmy.property=value,-Xshare:off`
 `--labels`        | Labels to write into container metadata, example: `--labels=label1=value1,label2=value2`.
-`--mode`          | The jar processing mode, candidates: exploded, packaged, default: exploded
 `--program-args`  | Program arguments for container entrypoint.
 `-u, --user`      | The user to run the container as, example: `--user=myuser:mygroup`.
 `--volumes`       | Directories on container to hold extra volumes, example: `--volumes=/var/log,/var/log2`.
 
-
 ## Common Jib CLI Options
+
 The options can either be specified in the command line or defined in a configuration file:
 ```
 [@<filename>...]      One or more argument files containing options.
 ```
+ 
 ### Auth/Security
+
 ```
     --allow-insecure-registries            Allow jib to send credentials over http (insecure)
     --send-credentials-over-http           Allow jib to send credentials over http (very insecure)
 ```
 
 ### Registry Credentials
+
 Credentials can be specified using credential helpers or username + password. The following options are available:
 
 ```
@@ -216,6 +260,7 @@ Mixed Mode
 2. `--from-credential-helper`, `--to-username`, `--to-password`
 
 ### Info Params
+
 ```
     --help                  print usage and exit
     --console <type>        set console output type, candidates: auto, rich, plain, default: auto
@@ -224,6 +269,7 @@ Mixed Mode
 ```
 
 ### Debugging Params
+
 ```
     --stacktrace            print stacktrace on error (for debugging issues in the jib-cli)
     --http-trace            enable http tracing at level=config, output=console
@@ -258,6 +304,7 @@ Some options can be set in the global Jib configuration file. The file is at the
   ]
 }
 ```
+**Note about `mirror.gcr.io`**: it is _not_ a Docker Hub mirror but a cache. It caches [frequently-accessed public Docker Hub images](https://cloud.google.com/container-registry/docs/pulling-cached-images), and it's often possible that your base image does not exist in `mirror.gcr.io`. In that case, Jib will have to fall back to use Docker Hub.
 
 ## References
 
@@ -350,6 +397,7 @@ layers:
 ```
 
 #### Layers Behavior
+
 - Copy directives are bound by the following rules
   `src`: filetype determined by type on local disk
    - if `src` is directory, `dest` is always considered a directory, directory and contents will be copied over and renamed to `dest`
@@ -385,6 +433,7 @@ layers:
      ```
      
 #### Base Image Parameter Inheritance
+
 Some values defined in the base image may be preserved and propogated into the new container.
 
 Parameters will append to base image value:
@@ -400,3 +449,11 @@ Parameters that will be overwritten:
 - `workingDirectory`
 - `entrypoint`
 - `cmd`
+
+## Privacy
+
+See the [Privacy page](https://github.com/GoogleContainerTools/jib/blob/master/docs/privacy.md).
+
+## Disclaimer
+
+This is not an officially supported Google product.

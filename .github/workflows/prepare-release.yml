@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Check input
         run: |
@@ -59,11 +59,13 @@ jobs:
             -Prelease.releaseVersion=${{ github.event.inputs.release_version }}
 
       - name: Create pull request
-        uses: repo-sync/pull-request@v2
+        uses: repo-sync/pull-request@v2.6
         id: create-pr
         with:
-          # Use a personal token to file a PR as a non-bot author to trigger other workflows (e.g., unit tests):
-          # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#triggering-new-workflows-using-a-personal-access-token;
+          # Use a personal token to file a PR to trigger other workflows (e.g., unit tests).
+          # Save your access token as GA_RELEASE_PR_PERSONAL_TOKEN.             
+          # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#triggering-new-workflows-using-a-personal-access-token
+          # https://docs.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets
           github_token: ${{ secrets.GA_RELEASE_PR_PERSONAL_TOKEN }}
           source_branch: ${{ github.event.inputs.project }}-release-v${{ github.event.inputs.release_version }}
           pr_title: "${{ github.event.inputs.project }} release v${{ github.event.inputs.release_version }}"
@@ -71,7 +73,7 @@ jobs:
           pr_label: "PR: Merge After Release"
 
       - name: Draft Maven/Gradle GitHub release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.4
         id: create-plugin-release
         if: ${{ github.event.inputs.project == 'maven' || github.event.inputs.project == 'gradle' }}
         env:
@@ -90,7 +92,7 @@ jobs:
             See [CHANGELOG.md](https://github.com/GoogleContainerTools/jib/blob/master/jib-${{ github.event.inputs.project }}-plugin/CHANGELOG.md) for more details.
 
       - name: Create Maven/Gradle release checklist issue
-        uses: JasonEtco/create-an-issue@v2
+        uses: JasonEtco/create-an-issue@v2.5.0
         if: ${{ github.event.inputs.project == 'maven' || github.event.inputs.project == 'gradle' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -104,7 +106,7 @@ jobs:
           filename: .github/RELEASE_TEMPLATES/plugin_release_checklist.md
 
       - name: Draft Core GitHub release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.4
         id: create-core-release
         if: ${{ github.event.inputs.project == 'core' }}
         env:
@@ -119,7 +121,7 @@ jobs:
             See [CHANGELOG.md](https://github.com/GoogleContainerTools/jib/blob/master/jib-core/CHANGELOG.md) for more details.
 
       - name: Create Core release checklist issue
-        uses: JasonEtco/create-an-issue@v2
+        uses: JasonEtco/create-an-issue@v2.5.0
         if: ${{ github.event.inputs.project == 'core' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

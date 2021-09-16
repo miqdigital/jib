@@ -73,7 +73,8 @@ public class CacheStorageWriterTest {
           try (GZIPOutputStream compressorStream = new GZIPOutputStream(outputStream)) {
             blob.writeTo(compressorStream);
           }
-        });
+        },
+        false);
   }
 
   private static Blob decompress(Blob blob) throws IOException {
@@ -248,9 +249,7 @@ public class CacheStorageWriterTest {
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
-        savedManifest2
-            .getLayers()
-            .stream()
+        savedManifest2.getLayers().stream()
             .map(layer -> layer.getDigest().getHash())
             .collect(Collectors.toList()));
 

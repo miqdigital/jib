@@ -76,9 +76,7 @@ public class StandardPackagedProcessorTest {
     // Validate dependencies layers.
     assertThat(nonSnapshotLayer.getName()).isEqualTo("dependencies");
     assertThat(
-            nonSnapshotLayer
-                .getEntries()
-                .stream()
+            nonSnapshotLayer.getEntries().stream()
                 .map(FileEntry::getExtractionPath)
                 .collect(Collectors.toList()))
         .isEqualTo(
@@ -88,9 +86,7 @@ public class StandardPackagedProcessorTest {
                 AbsoluteUnixPath.get("/app/directory/dependency4")));
     assertThat(snapshotLayer.getName()).isEqualTo("snapshot dependencies");
     assertThat(
-            snapshotLayer
-                .getEntries()
-                .stream()
+            snapshotLayer.getEntries().stream()
                 .map(FileEntry::getExtractionPath)
                 .collect(Collectors.toList()))
         .isEqualTo(ImmutableList.of(AbsoluteUnixPath.get("/app/dependency3-SNAPSHOT-1.jar")));
@@ -168,9 +164,9 @@ public class StandardPackagedProcessorTest {
   }
 
   @Test
-  public void testGetJarJavaVersion() {
+  public void testGetJavaVersion() {
     StandardPackagedProcessor standardPackagedProcessor =
         new StandardPackagedProcessor(Paths.get("ignore"), 8);
-    assertThat(standardPackagedProcessor.getJarJavaVersion()).isEqualTo(8);
+    assertThat(standardPackagedProcessor.getJavaVersion()).isEqualTo(8);
   }
 }

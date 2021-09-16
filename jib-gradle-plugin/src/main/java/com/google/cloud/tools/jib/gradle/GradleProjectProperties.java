@@ -72,6 +72,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPlugin;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.jvm.tasks.Jar;
@@ -199,12 +200,8 @@ public class GradleProjectProperties implements ProjectProperties {
     try {
       FileCollection projectDependencies =
           project.files(
-              project
-                  .getConfigurations()
-                  .getByName(configurationName)
-                  .getResolvedConfiguration()
-                  .getResolvedArtifacts()
-                  .stream()
+              project.getConfigurations().getByName(configurationName).getResolvedConfiguration()
+                  .getResolvedArtifacts().stream()
                   .filter(
                       artifact ->
                           artifact.getId().getComponentIdentifier()
@@ -245,15 +242,11 @@ public class GradleProjectProperties implements ProjectProperties {
           .addDependencies(
               dependencies.getFiles().stream().map(File::toPath).collect(Collectors.toList()))
           .addSnapshotDependencies(
-              snapshotDependencies
-                  .getFiles()
-                  .stream()
+              snapshotDependencies.getFiles().stream()
                   .map(File::toPath)
                   .collect(Collectors.toList()))
           .addProjectDependencies(
-              projectDependencies
-                  .getFiles()
-                  .stream()
+              projectDependencies.getFiles().stream()
                   .map(File::toPath)
                   .collect(Collectors.toList()));
 
@@ -370,7 +363,22 @@ public class GradleProjectProperties implements ProjectProperties {
     if (jarTask == null) {
       return null;
     }
-    return (String) jarTask.getManifest().getAttributes().get("Main-Class");
+
+    Object value = jarTask.getManifest().getAttributes().get("Main-Class");
+
+    if (value instanceof Provider) {
+      value = ((Provider<?>) value).getOrNull();
+    }
+
+    if (value instanceof String) {
+      return (String) value;
+    }
+
+    if (value == null) {
+      return null;
+    }
+
+    return String.valueOf(value);
   }
 
   @Override
@@ -401,8 +409,7 @@ public class GradleProjectProperties implements ProjectProperties {
     List<FileCollection> dependencyFileCollections = new ArrayList<>();
     dependencyFileCollections.add(project.getConfigurations().getByName(configurationName));
 
-    extraDirectories
-        .stream()
+    extraDirectories.stream()
         .filter(Files::exists)
         .map(Path::toFile)
         .map(project::files)
@@ -480,17 +487,18 @@ public class GradleProjectProperties implements ProjectProperties {
       ContainerBuildPlan buildPlan)
       throws JibPluginExtensionException {
     T extraConfig = null;
-    if (config.getExtraConfiguration().isPresent()) {
+    Optional<Object> configs = config.getExtraConfiguration();
+    if (configs.isPresent()) {
       if (!extraConfigType.isPresent()) {
         throw new IllegalArgumentException(
             "extension "
                 + extension.getClass().getSimpleName()
-                + " does not expect extension-specific configruation; remove the inapplicable "
+                + " does not expect extension-specific configuration; remove the inapplicable "
                 + "'pluginExtension.configuration' from Gradle build script");
       } else {
-        // config.getExtraConfiguration().get() is of type Action, so this cast always succeeds.
+        // configs.get() is of type Action, so this cast always succeeds.
         // (Note generic <T> is erased at runtime.)
-        Action<T> action = (Action<T>) config.getExtraConfiguration().get();
+        Action<T> action = (Action<T>) configs.get();
         extraConfig = project.getObjects().newInstance(extraConfigType.get(), project);
         action.execute(extraConfig);
       }

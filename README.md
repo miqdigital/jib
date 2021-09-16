@@ -5,12 +5,10 @@
 ![Build Status](https://storage.googleapis.com/cloud-tools-for-java-kokoro-build-badges/jib-windows-master-orb.svg)
 ![Build Status](https://storage.googleapis.com/cloud-tools-for-java-kokoro-build-badges/jib-macos-master-orb.svg)
 [![Gitter version](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/google/jib)
-[![codecov](https://codecov.io/gh/GoogleContainerTools/jib/branch/master/graph/badge.svg)](https://codecov.io/gh/GoogleContainerTools/jib)
 
 # Jib
 
 <image src="https://github.com/GoogleContainerTools/jib/raw/master/logo/jib-build-docker-java-container-image.png" alt="Jib - Containerize your Java applications." width="650px" />
-
 
 | ☑️  Jib User Survey |
 | :----- |
@@ -60,9 +58,15 @@ Whereas traditionally a Java application is built as a single image layer with t
 
 See also [rules_docker](https://github.com/bazelbuild/rules_docker) for a similar existing container image build tool for the [Bazel build system](https://github.com/bazelbuild/bazel).
 
-## Frequently Asked Questions (FAQ)
+## Need Help?
 
-See the [Frequently Asked Questions (FAQ) page](docs/faq.md).
+A lot of questions are already answered!
+
+* [Frequently Asked Questions (FAQ)](docs/faq.md)
+* [Stack Overflow](https://stackoverflow.com/questions/tagged/jib)
+* [GitHub issues](https://stackoverflow.com/questions/tagged/jib)
+
+_For usage questions, please ask them on Stack Overflow._
 
 ## Privacy
 
@@ -77,8 +81,12 @@ We welcome contributions! Here's how you can contribute:
 * Join the [jib-users mailing list](https://groups.google.com/forum/#!forum/jib-users)
 * Contribute:
   * *Read the [contributing guide](https://github.com/GoogleContainerTools/jib/blob/master/CONTRIBUTING.md) before starting work on an issue*
-  * Try to fix [good first issues](https://github.com/GoogleContainerTools/jib/labels/kind%2Fgood%20first%20issue)
+  * Try to fix [good first issues](https://github.com/GoogleContainerTools/jib/labels/good%20first%20issue)
   * Help out on [issues that need help](https://github.com/GoogleContainerTools/jib/labels/kind%2Fquestion)
   * Join in on [discussion issues](https://github.com/GoogleContainerTools/jib/labels/discuss)
 <!--  * Read the [style guide] -->
 *Make sure to follow the [Code of Conduct](https://github.com/GoogleContainerTools/jib/blob/master/CODE_OF_CONDUCT.md) when contributing so we can foster an open and welcoming community.*
+
+## Disclaimer
+
+This is not an officially supported Google product.

@@ -36,6 +36,8 @@ class MavenSettingsProxyProvider {
   private static final ImmutableList<String> PROXY_PROPERTIES =
       ImmutableList.of("proxyHost", "proxyPort", "proxyUser", "proxyPassword");
 
+  private MavenSettingsProxyProvider() {}
+
   /**
    * Initializes proxy settings based on Maven settings if they are not already set by the user
    * directly.
@@ -49,16 +51,14 @@ class MavenSettingsProxyProvider {
       if (areProxyPropertiesSet(protocol)) {
         continue;
       }
-      settings
-          .getProxies()
-          .stream()
+      settings.getProxies().stream()
           .filter(Proxy::isActive)
           .filter(proxy -> protocol.equals(proxy.getProtocol()))
           .findFirst()
           .ifPresent(proxies::add);
     }
 
-    if (proxies.size() == 0) {
+    if (proxies.isEmpty()) {
       return;
     }
 
@@ -106,8 +106,7 @@ class MavenSettingsProxyProvider {
    */
   @VisibleForTesting
   static boolean areProxyPropertiesSet(String protocol) {
-    return PROXY_PROPERTIES
-        .stream()
+    return PROXY_PROPERTIES.stream()
         .anyMatch(property -> System.getProperty(protocol + "." + property) != null);
   }
 }
